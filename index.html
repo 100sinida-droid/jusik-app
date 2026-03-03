@@ -222,6 +222,9 @@ footer{text-align:center;padding:32px 24px;border-top:1px solid var(--brd);color
 .disc-empty{padding:28px 20px;text-align:center}
 .disc-empty-icon{font-size:2rem;margin-bottom:8px}
 .disc-empty-txt{color:var(--tx3);font-size:.83rem}
+
+/* 장 상태 배지 */
+#rExtraPrice{border-left:2px solid rgba(0,212,170,.3);padding-left:8px;margin-top:5px}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-STOCKMIND01"></script>
@@ -277,6 +280,7 @@ footer{text-align:center;padding:32px 24px;border-top:1px solid var(--brd);color
       <div class="rmeta"><span class="rmkt" id="rMkt"></span><span class="rtime" id="rTime"></span></div>
       <div class="rname-row"><h2 id="rName"></h2><span class="rtick" id="rTick"></span></div>
       <div class="rprice-row"><span class="rprice" id="rPr"></span><span class="rchg" id="rCh"></span></div>
+      <div id="rExtraPrice" style="display:none;font-size:.72rem;color:var(--tx2);margin-top:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;"></div>
     </div>
     <div class="dg">
       <div class="cc"><div class="sec-lbl">가격 차트 (최근 30일)</div><canvas id="mychart"></canvas></div>
@@ -803,7 +807,8 @@ function buildPrompt(sd) {
     '현재가: ' + sd.priceStr + ' | 현재가raw: ' + sd.priceRaw + ' | 등락: ' + sd.chgPct + '%\n' +
     '52주고가: ' + sd.h52s + ' | 52주고가raw: ' + sd.h52raw + '\n' +
     '52주저가: ' + sd.l52s + ' | 52주저가raw: ' + sd.l52raw + '\n' +
-    '거래량: ' + sd.vols + ' | 시가총액: ' + sd.caps + ' | PER: ' + sd.pers + ' | PBR: ' + sd.pbrs + '\n' +
+    '거래량: ' + sd.vols + ' | 시가총액: ' + sd.caps + ' | 장상태: ' + (sd.marketState || 'CLOSED') + '\n' +
+    'PER: ' + sd.pers + ' | PBR: ' + sd.pbrs + '\n' +
     (sd.fwdPers !== '—' ? 'Forward PER: ' + sd.fwdPers + ' | EPS: ' + sd.epss + ' | ROE: ' + sd.roes + ' | 배당수익률: ' + sd.divs + '\n' : '') +
     '최근10일: ' + recent + ' | 트렌드: ' + trend + ' | 변동성: ' + volPct + '%\n\n' +
     'JSON:{"verdict":"적극매수|매수|주목|중립|관망|매도|강력매도","verdictReason":"3~4문장",' +
@@ -966,7 +971,12 @@ function doSearch(sym, displayName) {
     var currency  = qd.currency  || (kr ? 'KRW' : 'USD');
     var isKRW     = (currency === 'KRW');
 
+    // 미국 주식 장 상태 처리
+    var marketState = qd.marketState || (isKRW ? 'LIVE' : 'CLOSED');
+    // 표시 가격은 Worker가 이미 선택 (PRE/POST/정규장 자동 선택)
     var priceStr = fmtPrice(price, isKRW);
+    // 정규장 가격 (프리마켓 중에는 전일 종가 기준 등락 따로 표시)
+    var regPriceStr = (qd.regularPrice && !isKRW) ? fmtPrice(qd.regularPrice, false) : priceStr;
     var chgStr   = (up ? '+' : '') +
       (isKRW ? fmtNum(change, 0) + '원' : (change >= 0 ? '+$' : '-$') + fmtNum(Math.abs(change), 2)) +
       ' (' + fmtPct(changePct) + ')';
@@ -989,12 +999,36 @@ function doSearch(sym, displayName) {
 
     // 헤더
     G('rMkt').textContent  = qd.exchange || mkt;
-    G('rTime').textContent = '실시간 · ' + new Date().toLocaleTimeString('ko-KR');
+
+    // 미국 주식: 장 상태 라벨 + 시간 표시
+    var timeLabel;
+    if (!isKRW) {
+      var msMap = { PRE: '🌅 프리마켓', LIVE: '🟢 정규장', POST: '🌙 애프터마켓', CLOSED: '⭕ 장마감' };
+      var msLabel = msMap[marketState] || ('⭕ ' + marketState);
+      timeLabel = msLabel + ' · ' + new Date().toLocaleTimeString('ko-KR');
+    } else {
+      timeLabel = '실시간 · ' + new Date().toLocaleTimeString('ko-KR');
+    }
+    G('rTime').textContent = timeLabel;
     G('rName').textContent = name;
     G('rTick').textContent = sym;
     G('rPr').textContent   = priceStr;
     G('rCh').textContent   = chgStr;
     G('rCh').className     = 'rchg ' + (up ? 'up' : 'dn');
+
+    // 미국 주식 프리/애프터 중 정규장 종가 참고값 표시
+    var extraPriceEl = G('rExtraPrice');
+    if (extraPriceEl) {
+      if (!isKRW && (marketState === 'PRE' || marketState === 'POST') && qd.regularPrice) {
+        var regChgPct = qd.regularChangePct || 0;
+        var regLabel  = marketState === 'PRE' ? '전일종가' : '정규장종가';
+        extraPriceEl.textContent = regLabel + ': ' + regPriceStr +
+          ' (' + (regChgPct >= 0 ? '+' : '') + fmtPct(regChgPct) + ')';
+        extraPriceEl.style.display = 'block';
+      } else {
+        extraPriceEl.style.display = 'none';
+      }
+    }
 
     // 지표 그리드 (10칸) — 국내/미국 분기
     var UC = 'var(--up)', DC = 'var(--dn)', AC = 'var(--acc)', TX = 'var(--tx)';
@@ -1015,21 +1049,32 @@ function doSearch(sym, displayName) {
         { l: '외국인비율', v: fgns, c: TX },
       ];
     } else {
-      // 미국 주식: PER(TTM)·Forward PER·PBR·EPS·ROE·배당수익률 표시
+      // 미국 주식: 장 상태 + 펀더멘털 통합 표시
+      var prevCloseStr = qd.prevClose ? '$' + fmtNum(qd.prevClose, 2) : '—';
+      // 프리/애프터마켓 중에는 정규장 가격도 함께 표시
+      var regStr = (qd.regularPrice && (marketState === 'PRE' || marketState === 'POST'))
+        ? ('$' + fmtNum(qd.regularPrice, 2) +
+           ' (' + (qd.regularChangePct >= 0 ? '+' : '') + fmtNum(qd.regularChangePct, 2) + '%)')
+        : '—';
+      var stateLbl = { PRE:'프리마켓', LIVE:'정규장', POST:'애프터', CLOSED:'종가' }[marketState] || marketState;
       stats = [
-        { l: '현재가',       v: priceStr,          c: TX },
-        { l: '등락률',       v: fmtPct(changePct), c: CC },
-        { l: '52주 고가',    v: h52s,    c: UC },
-        { l: '52주 저가',    v: l52s,    c: DC },
-        { l: '거래량',       v: vols,    c: TX },
-        { l: '시가총액',     v: caps,    c: TX },
-        { l: 'PER (TTM)',   v: pers,    c: AC },
-        { l: 'Forward PER', v: fwdPers, c: AC },
-        { l: 'PBR',         v: pbrs,    c: AC },
-        { l: 'EPS',         v: epss,    c: AC },
-        { l: 'ROE',         v: roes,    c: AC },
-        { l: '배당수익률',   v: divs,    c: up ? UC : TX },
-      ];
+        { l: stateLbl + ' 가격',  v: priceStr,          c: TX },
+        { l: '등락 (' + stateLbl + ')', v: fmtPct(changePct), c: CC },
+        { l: '52주 고가',         v: h52s,              c: UC },
+        { l: '52주 저가',         v: l52s,              c: DC },
+        { l: '거래량',            v: vols,              c: TX },
+        { l: '시가총액',          v: caps,              c: TX },
+        { l: 'PER (TTM)',        v: pers,              c: AC },
+        { l: 'Forward PER',      v: fwdPers,           c: AC },
+        { l: 'PBR',              v: pbrs,              c: AC },
+        { l: 'EPS',              v: epss,              c: AC },
+        { l: 'ROE',              v: roes,              c: AC },
+        { l: '배당수익률',        v: divs,              c: up ? UC : TX },
+      ].filter(function(s) {
+        // 정규장 가격이 없으면 그 행 숨김
+        if (s.l.includes('정규장') && regStr === '—') return false;
+        return true;
+      });
     }
     G('statsGrid').innerHTML = stats.map(function(s) {
       return '<div class="stat-box"><div class="stat-l">' + s.l + '</div><div class="stat-v" style="color:' + s.c + '">' + s.v + '</div></div>';
@@ -1055,6 +1100,7 @@ function doSearch(sym, displayName) {
       pers: pers, pbrs: pbrs,
       // 미국 주식 추가 지표
       fwdPers: fwdPers, epss: epss, roes: roes, divs: divs,
+      marketState: marketState,
       prices: prices,
     };
     callAI(sd).then(renderAI).catch(function(e) {
