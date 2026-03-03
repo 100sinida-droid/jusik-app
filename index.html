@@ -241,7 +241,9 @@ footer{text-align:center;padding:32px 24px;border-top:1px solid var(--brd);color
 </script>
 <!-- Google AdSense -->
 <meta name="google-adsense-account" content="ca-pub-7938956361770773">
+<!-- AdSense: 계정 승인 후 아래 주석 해제
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7938956361770773" crossorigin="anonymous"></script>
+-->
 </head>
 <body>
 <header>
@@ -332,17 +334,7 @@ footer{text-align:center;padding:32px 24px;border-top:1px solid var(--brd);color
 
 
   <!-- ★ 애드센스 광고 슬롯 1 (메인 콘텐츠 사이) -->
-  <div class="ad-slot" id="adSlot1">
-<ins class="adsbygoogle"
-     style="display:block;min-height:90px"
-     data-ad-client="ca-pub-7938956361770773"
-     data-ad-slot="5368010468"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
-</script>
-  </div>
+  <div class="ad-slot" id="adSlot1" style="display:none"></div>
 
   <!-- 투자 핵심 원칙 (정적 콘텐츠 - SEO + 애드센스 가치) -->
   <section class="guide-sec" id="investGuide">
@@ -379,17 +371,7 @@ footer{text-align:center;padding:32px 24px;border-top:1px solid var(--brd);color
   </section>
 
   <!-- ★ 애드센스 광고 슬롯 2 (콘텐츠 하단) -->
-  <div class="ad-slot" id="adSlot2">
-<ins class="adsbygoogle"
-     style="display:block;min-height:90px"
-     data-ad-client="ca-pub-7938956361770773"
-     data-ad-slot="3808518808"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
-</script>
-  </div>
+  <div class="ad-slot" id="adSlot2" style="display:none"></div>
 
   <section class="ps">
     <div class="ps-l">인기 종목</div>
@@ -1164,8 +1146,33 @@ function showSugAndSearch(nameQuery) {
 
       if (results.length === 0) {
         // 영문 입력이면 단어들을 티커 후보로 직접 시도 버튼 제공
-        var words = nameQuery.trim().toUpperCase().split(/\s+/);
-        var tickerCands = words.filter(function(w) { return /^[A-Z]{1,6}$/.test(w); });
+        // 회사명에서 티커 후보 추출 (1~6자 알파벳)
+        var STOPWORDS_FE = {"INC":1,"CORP":1,"LTD":1,"LLC":1,"CO":1,"THE":1,"AND":1,"OF":1,"GROUP":1,
+          "HOLDINGS":1,"TECHNOLOGIES":1,"COMPUTING":1,"THERAPEUTICS":1,"SCIENCES":1,"SYSTEMS":1,
+          "SOLUTIONS":1,"INTERNATIONAL":1,"GLOBAL":1,"PHARMA":1,"BIO":1,"BIOTECH":1};
+        var cleanWords = nameQuery.trim().toUpperCase()
+          .replace(/[,.()\[\]&+]/g, ' ').split(/\s+/)
+          .filter(function(w) { return w.length > 0 && !STOPWORDS_FE[w]; });
+        var tickerCands = [];
+        if (cleanWords.length > 0) {
+          // 첫 단어 2~5자 접두어
+          var w0 = cleanWords[0];
+          for (var l = 2; l <= Math.min(5, w0.length); l++) {
+            var cand = w0.slice(0, l);
+            if (tickerCands.indexOf(cand) < 0) tickerCands.push(cand);
+          }
+          // 단어들 첫글자 조합
+          var initials = cleanWords.slice(0, 4).map(function(w) { return w[0]; }).join('');
+          if (initials.length >= 2 && initials.length <= 5 && tickerCands.indexOf(initials) < 0)
+            tickerCands.push(initials);
+          // 2~5자 단어 직접 추가
+          cleanWords.forEach(function(w) {
+            if (w.length >= 2 && w.length <= 5 && /^[A-Z]+$/.test(w) && tickerCands.indexOf(w) < 0)
+              tickerCands.push(w);
+          });
+          // 알파벳만 남기고 최대 4개
+          tickerCands = tickerCands.filter(function(t) { return /^[A-Z]{2,5}$/.test(t); }).slice(0, 4);
+        }
         var btnHtml = '';
         if (tickerCands.length > 0) {
           btnHtml = '<div class="sg-empty-btns">' +

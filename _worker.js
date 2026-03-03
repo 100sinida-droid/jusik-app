@@ -89,55 +89,97 @@ async function searchKR(q) {
 
 // ── Yahoo Finance 검색 (미국 주식/ETF) ───────────────────────
 async function searchUS(q) {
-  const HDR = { "User-Agent": UA, "Accept": "application/json" };
+  const HDR = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://finance.yahoo.com/",
+  };
 
-  // v1/finance/search 시도 (query1 → query2 순서)
-  let quotes = [];
-  for (const host of ["query1", "query2"]) {
+  // Yahoo 결과 파서
+  function parseQ(arr) {
+    const out = [];
+    for (const qt of (arr ?? [])) {
+      const sym  = String(qt.symbol ?? qt.Symbol ?? "").trim().toUpperCase();
+      const nm   = String(qt.longname ?? qt.shortname ?? qt.name ?? sym).trim();
+      const type = String(qt.quoteType ?? "EQUITY").toUpperCase();
+      const exch = String(qt.exchange ?? qt.exch ?? "").toUpperCase();
+      if (!sym || sym.length > 8 || /^\d{6}$/.test(sym)) continue;
+      if (!["EQUITY","ETF","MUTUALFUND","STOCK"].includes(type)) continue;
+      const mkt = ["NMS","NGM","NCM"].includes(exch) ? "NASDAQ"
+                : ["NYQ","ASE","PCX"].includes(exch) ? "NYSE"
+                : ["PNK","OTC","OTCBB","PINK"].includes(exch) ? "OTC"
+                : type === "ETF" ? "ETF" : "US";
+      out.push({ symbol: sym, code: sym, name: nm, market: mkt });
+    }
+    return out;
+  }
+
+  // [1단계] v6/autocomplete
+  for (const host of ["query2", "query1"]) {
     const d = await safeFetch(
-      `https://${host}.finance.yahoo.com/v1/finance/search` +
-      `?q=${encodeURIComponent(q)}&quotesCount=10&newsCount=0&enableFuzzyQuery=true&enableNavLinks=false`,
-      { headers: HDR, _timeout: 6000 }
+      `https://${host}.finance.yahoo.com/v6/finance/autocomplete?query=${encodeURIComponent(q)}&lang=en`,
+      { headers: HDR, _timeout: 5000 }
     );
-    if (d?.quotes?.length) { quotes = d.quotes; break; }
-  }
-
-  const out = [];
-  for (const qt of quotes) {
-    const sym  = String(qt.symbol ?? "").trim();
-    const nm   = String(qt.longname ?? qt.shortname ?? sym).trim();
-    const type = String(qt.quoteType ?? "").toUpperCase();
-    const exch = String(qt.exchange ?? "").toUpperCase();
-    if (!sym || sym.length > 8) continue;           // ETF 접미어 고려해 8까지
-    if (!["EQUITY","ETF","MUTUALFUND"].includes(type)) continue;
-    if (/^\d{6}$/.test(sym)) continue;              // 한국 코드 제외
-    // 거래소별 마켓명 (OTC/PNK도 포함 - 소형 바이오 대응)
-    const mkt = ["NMS","NGM","NCM"].includes(exch) ? "NASDAQ"
-              : ["NYQ","ASE","PCX"].includes(exch) ? "NYSE"
-              : ["PNK","OTC","OTCBB"].includes(exch) ? "OTC"
-              : type === "ETF" ? "ETF" : "US";
-    out.push({ symbol: sym, code: sym, name: nm, market: mkt });
-  }
-
-  // Yahoo search 결과가 없으면: 입력이 짧은 단어일 때 직접 quote 시도
-  if (out.length === 0) {
-    const words = q.trim().toUpperCase().split(/\s+/);
-    const candidates = words.filter(w => /^[A-Z]{1,6}$/.test(w));
-    for (const ticker of candidates.slice(0, 3)) {
-      const qd = await safeFetch(
-        `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(ticker)}&fields=longName,shortName,exchangeName,quoteType`,
-        { headers: HDR, _timeout: 5000 }
-      );
-      const r = qd?.quoteResponse?.result?.[0];
-      if (r && r.regularMarketPrice !== undefined) {
-        const mkt2 = ["NMS","NGM","NCM"].includes(r.exchange ?? "") ? "NASDAQ"
-                   : ["NYQ","ASE"].includes(r.exchange ?? "") ? "NYSE" : "US";
-        out.push({ symbol: ticker, code: ticker, name: r.longName ?? r.shortName ?? ticker, market: mkt2 });
-      }
+    const items = d?.ResultSet?.Result ?? [];
+    if (items.length > 0) {
+      const mapped = items.map(it => ({
+        symbol: it.symbol, longname: it.name,
+        quoteType: it.type ?? "EQUITY", exchange: it.exch ?? "",
+      }));
+      const out = parseQ(mapped);
+      if (out.length > 0) return out;
     }
   }
 
-  return out;
+  // [2단계] v1/finance/search
+  for (const host of ["query1", "query2"]) {
+    const d = await safeFetch(
+      `https://${host}.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=10&newsCount=0&enableFuzzyQuery=true`,
+      { headers: HDR, _timeout: 7000 }
+    );
+    const out = parseQ(d?.quotes);
+    if (out.length > 0) return out;
+  }
+
+  // [3단계] 회사명에서 티커 후보 생성 → v8/chart 직접 검증
+  const STOPWORDS = new Set(["INC","CORP","LTD","LLC","CO","THE","AND","OF","GROUP",
+    "HOLDINGS","TECHNOLOGIES","COMPUTING","THERAPEUTICS","SCIENCES","SYSTEMS",
+    "SOLUTIONS","INTERNATIONAL","GLOBAL","PHARMA","BIO","BIOTECH"]);
+  const words = q.trim().toUpperCase()
+    .replace(/[,.()\[\]&+]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 0 && !STOPWORDS.has(w));
+
+  const cands = new Set();
+  if (words.length > 0) {
+    const w0 = words[0];
+    for (let l = 2; l <= Math.min(5, w0.length); l++) cands.add(w0.slice(0, l));
+    const initials = words.slice(0, 4).map(w => w[0]).join("");
+    if (initials.length >= 2 && initials.length <= 5) cands.add(initials);
+    for (const w of words) {
+      if (w.length >= 2 && w.length <= 5) cands.add(w);
+    }
+  }
+
+  const tickerList = [...cands].filter(t => /^[A-Z]{2,5}$/.test(t)).slice(0, 8);
+  const checked = await Promise.allSettled(
+    tickerList.map(ticker =>
+      safeFetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`,
+        { headers: HDR, _timeout: 5000 }
+      ).then(d => {
+        const meta = d?.chart?.result?.[0]?.meta;
+        if (!meta?.regularMarketPrice) return null;
+        const exch = String(meta.exchangeName ?? "").toUpperCase();
+        const mkt = ["NMS","NGM","NCM"].includes(exch) ? "NASDAQ"
+                  : ["NYQ","NYSE","ASE","PCX"].includes(exch) ? "NYSE"
+                  : ["PNK","OTC"].includes(exch) ? "OTC" : "US";
+        return { symbol: ticker, code: ticker, name: meta.longName ?? meta.shortName ?? ticker, market: mkt };
+      })
+    )
+  );
+  return checked.filter(r => r.status === "fulfilled" && r.value).map(r => r.value);
 }
 
 // ── 통합 검색 (KR + US 병행) ─────────────────────────────────
