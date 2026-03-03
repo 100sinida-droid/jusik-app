@@ -94,7 +94,7 @@ main{max-width:1100px;margin:0 auto;padding:0 24px 80px}
 .cc,.sc{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:20px}
 .sec-lbl{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin-bottom:14px}
 #mychart{width:100%!important;height:215px!important}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .stat-box{background:var(--bg3);border-radius:8px;padding:10px 12px}
 .stat-l{font-family:'JetBrains Mono',monospace;font-size:.57rem;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);margin-bottom:4px}
 .stat-v{font-family:'JetBrains Mono',monospace;font-size:.86rem;font-weight:700}
@@ -804,6 +804,7 @@ function buildPrompt(sd) {
     '52주고가: ' + sd.h52s + ' | 52주고가raw: ' + sd.h52raw + '\n' +
     '52주저가: ' + sd.l52s + ' | 52주저가raw: ' + sd.l52raw + '\n' +
     '거래량: ' + sd.vols + ' | 시가총액: ' + sd.caps + ' | PER: ' + sd.pers + ' | PBR: ' + sd.pbrs + '\n' +
+    (sd.fwdPers !== '—' ? 'Forward PER: ' + sd.fwdPers + ' | EPS: ' + sd.epss + ' | ROE: ' + sd.roes + ' | 배당수익률: ' + sd.divs + '\n' : '') +
     '최근10일: ' + recent + ' | 트렌드: ' + trend + ' | 변동성: ' + volPct + '%\n\n' +
     'JSON:{"verdict":"적극매수|매수|주목|중립|관망|매도|강력매도","verdictReason":"3~4문장",' +
     '"buyStrategy":{"zone":"구간","timing":"타이밍","split":["1차","2차"]},' +
@@ -911,21 +912,18 @@ function resolveInput(v) {
   if (/^\d{6}\.(KS|KQ|KO)$/i.test(v)) return { sym: v.toUpperCase().replace('.KO', '.KS'), name: v };
 
   // 5. 미국 티커 처리
-  var up = v.toUpperCase();
-  if (/^[A-Z]{1,5}$/.test(up)) {
-    // DB에 있으면 바로 반환
+  var up = v.toUpperCase().trim();
+  // 미국 티커 패턴 (1~6 알파벳): KR_AL 체크 이후에 오므로 한국어 별칭은 이미 처리됨
+  if (/^[A-Z]{1,6}$/.test(up)) {
     var found = US_DB.find(function(d) { return d.c === up; });
     if (found) return { sym: up, name: found.n };
-    // 2글자: KR_AL에 이미 없으므로 (위에서 체크됨) 미국 티커로 시도
-    // 단, 1글자는 너무 짧아 API 검색
-    if (up.length <= 1) return null;
-    // 2~5글자: 일반 미국 티커로 직접 시도 (Yahoo Finance에서 검증)
-    // (IBM, HPQ, GE, BA, F, GM, V 등 유효한 티커 패턴)
-    // KR_AL에 있는 것은 이미 위에서 처리됨
+    // 1글자 단독은 너무 모호 → API 검색
+    if (up.length === 1) return null;
+    // 2~6글자: Yahoo Finance에서 검증하도록 직접 티커로 시도
     return { sym: up, name: up };
   }
-  // 점(.) 포함한 티커: BRK.B 등
-  if (/^[A-Z]{1,5}\.[AB]$/.test(up)) {
+  // 점(.) 포함 티커: BRK.B, BF.B 등
+  if (/^[A-Z]{1,5}\.[A-Z]$/.test(up)) {
     var found2 = US_DB.find(function(d) { return d.c === up; });
     return found2 ? { sym: up, name: found2.n } : { sym: up, name: up };
   }
@@ -977,10 +975,15 @@ function doSearch(sym, displayName) {
     var l52s  = fmtPrice(qd.low52,      isKRW);
     var vols  = qd.volume > 0 ? fmtNum(qd.volume, 0) : '—';
     var caps  = fmtCap(qd.marketCap,    isKRW);
-    var pers  = qd.per > 0   ? fmtNum(qd.per, 2) : '—';
-    var pbrs  = qd.pbr > 0   ? fmtNum(qd.pbr, 2) : '—';
+    var pers  = qd.per > 0   ? fmtNum(qd.per, 2) + '배' : '—';
+    var pbrs  = qd.pbr > 0   ? fmtNum(qd.pbr, 2) + '배' : '—';
     var fgns  = fmtFgn(qd.foreignRatio);
-    var opens = fmtPrice(qd.open,        isKRW);
+    var opens = fmtPrice(qd.open, isKRW);
+    // 미국 전용 지표
+    var fwdPers  = qd.fwdPer > 0   ? fmtNum(qd.fwdPer, 2) + '배' : '—';
+    var epss     = qd.eps   != null && qd.eps   !== 0 ? '$' + fmtNum(qd.eps,  2) : '—';
+    var roes     = qd.roe   != null && qd.roe   !== 0 ? fmtNum(qd.roe,  1) + '%' : '—';
+    var divs     = qd.divYield != null && qd.divYield > 0 ? fmtNum(qd.divYield, 2) + '%' : '—';
 
     var name = displayName || qd.name || sym;
 
@@ -993,21 +996,41 @@ function doSearch(sym, displayName) {
     G('rCh').textContent   = chgStr;
     G('rCh').className     = 'rchg ' + (up ? 'up' : 'dn');
 
-    // 지표 그리드 (10칸)
+    // 지표 그리드 (10칸) — 국내/미국 분기
     var UC = 'var(--up)', DC = 'var(--dn)', AC = 'var(--acc)', TX = 'var(--tx)';
     var CC = up ? UC : DC;
-    var stats = [
-      { l: '현재가',    v: priceStr, c: TX },
-      { l: '등락률',    v: fmtPct(changePct), c: CC },
-      { l: '52주 고가', v: h52s,  c: UC },
-      { l: '52주 저가', v: l52s,  c: DC },
-      { l: '거래량',    v: vols,  c: TX },
-      { l: '시가총액',  v: caps,  c: TX },
-      { l: 'PER',      v: pers,  c: AC },
-      { l: 'PBR',      v: pbrs,  c: AC },
-      { l: '시가',      v: opens, c: TX },
-      { l: '외국인비율', v: fgns, c: TX },
-    ];
+    var stats;
+    if (isKRW) {
+      // 국내 주식: PER·PBR·외국인비율 표시
+      stats = [
+        { l: '현재가',    v: priceStr,          c: TX },
+        { l: '등락률',    v: fmtPct(changePct), c: CC },
+        { l: '52주 고가', v: h52s,  c: UC },
+        { l: '52주 저가', v: l52s,  c: DC },
+        { l: '거래량',    v: vols,  c: TX },
+        { l: '시가총액',  v: caps,  c: TX },
+        { l: 'PER',      v: pers,  c: AC },
+        { l: 'PBR',      v: pbrs,  c: AC },
+        { l: '시가',      v: opens, c: TX },
+        { l: '외국인비율', v: fgns, c: TX },
+      ];
+    } else {
+      // 미국 주식: PER(TTM)·Forward PER·PBR·EPS·ROE·배당수익률 표시
+      stats = [
+        { l: '현재가',       v: priceStr,          c: TX },
+        { l: '등락률',       v: fmtPct(changePct), c: CC },
+        { l: '52주 고가',    v: h52s,    c: UC },
+        { l: '52주 저가',    v: l52s,    c: DC },
+        { l: '거래량',       v: vols,    c: TX },
+        { l: '시가총액',     v: caps,    c: TX },
+        { l: 'PER (TTM)',   v: pers,    c: AC },
+        { l: 'Forward PER', v: fwdPers, c: AC },
+        { l: 'PBR',         v: pbrs,    c: AC },
+        { l: 'EPS',         v: epss,    c: AC },
+        { l: 'ROE',         v: roes,    c: AC },
+        { l: '배당수익률',   v: divs,    c: up ? UC : TX },
+      ];
+    }
     G('statsGrid').innerHTML = stats.map(function(s) {
       return '<div class="stat-box"><div class="stat-l">' + s.l + '</div><div class="stat-v" style="color:' + s.c + '">' + s.v + '</div></div>';
     }).join('');
@@ -1028,7 +1051,10 @@ function doSearch(sym, displayName) {
       h52s: h52s, l52s: l52s,
       h52raw: qd.high52 || 0,
       l52raw: qd.low52  || 0,
-      vols: vols, caps: caps, pers: pers, pbrs: pbrs,
+      vols: vols, caps: caps,
+      pers: pers, pbrs: pbrs,
+      // 미국 주식 추가 지표
+      fwdPers: fwdPers, epss: epss, roes: roes, divs: divs,
       prices: prices,
     };
     callAI(sd).then(renderAI).catch(function(e) {

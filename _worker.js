@@ -67,25 +67,74 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/
 const KR_HDR = { "User-Agent": UA, "Accept": "application/json,*/*", "Accept-Language": "ko-KR,ko;q=0.9", "Referer": "https://m.stock.naver.com/" };
 const CH_HDR = { "User-Agent": UA, "Referer": "https://finance.naver.com/" };
 
-// ── 네이버 종목 검색 (항상 ok:true 반환) ─────────────────────
-async function searchNaver(q) {
+// ── 네이버 자동완성 (국내 주식) ─────────────────────────────
+async function searchKR(q) {
   const d = await safeFetch(
     `https://ac.stock.naver.com/ac?q=${encodeURIComponent(q)}&target=index,stock,etf,fund,futures,option`,
     { headers: KR_HDR, _timeout: 5000 }
   );
-  if (!d) return J({ ok: true, results: [] });
-
+  if (!d) return [];
   const items = Array.isArray(d.items) ? d.items : (d.result?.items ?? []);
-  const results = [];
-  for (const it of items.slice(0, 12)) {
+  const out = [];
+  for (const it of items.slice(0, 10)) {
     const rc = String(Array.isArray(it) ? it[0] : (it.code ?? it.symbolCode ?? ""));
     const nm = String(Array.isArray(it) ? it[1] : (it.name ?? it.stockName ?? ""));
     const mt = String(Array.isArray(it) ? it[2] : (it.typeCode ?? ""));
     if (!rc || !nm || !/^\d{6}$/.test(rc)) continue;
     const isKQ = mt === "2" || mt === "NQ" || mt.includes("KOSDAQ");
-    results.push({ symbol: rc + (isKQ ? ".KQ" : ".KS"), code: rc, name: nm, market: isKQ ? "KOSDAQ" : "KOSPI" });
+    out.push({ symbol: rc + (isKQ ? ".KQ" : ".KS"), code: rc, name: nm, market: isKQ ? "KOSDAQ" : "KOSPI" });
   }
-  return J({ ok: true, results });
+  return out;
+}
+
+// ── Yahoo Finance 검색 (미국 주식/ETF) ───────────────────────
+async function searchUS(q) {
+  // v1/finance/search: 티커·회사명 모두 검색 가능
+  const d = await safeFetch(
+    `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=8&newsCount=0&enableFuzzyQuery=true&enableNavLinks=false`,
+    { headers: { "User-Agent": UA, "Accept": "application/json" }, _timeout: 6000 }
+  );
+  if (!d?.quotes) return [];
+  const out = [];
+  for (const qt of d.quotes) {
+    const sym  = String(qt.symbol ?? "").trim();
+    const nm   = String(qt.longname ?? qt.shortname ?? sym).trim();
+    const type = String(qt.quoteType ?? "").toUpperCase();
+    const exch = String(qt.exchange ?? "").toUpperCase();
+    if (!sym || sym.length > 6) continue;
+    // 주식·ETF만, OTC/pink sheet 제외
+    if (!["EQUITY","ETF"].includes(type)) continue;
+    if (["PNK","OTC","OTCBB"].includes(exch)) continue;
+    // 6자리 숫자(한국 코드) 제외
+    if (/^\d{6}$/.test(sym)) continue;
+    const mkt = ["NMS","NGM","NCM"].includes(exch) ? "NASDAQ"
+              : ["NYQ","ASE","PCX"].includes(exch) ? "NYSE"
+              : type === "ETF" ? "ETF" : "US";
+    out.push({ symbol: sym, code: sym, name: nm, market: mkt });
+  }
+  return out;
+}
+
+// ── 통합 검색 (KR + US 병행) ─────────────────────────────────
+async function searchAll(q) {
+  const lq = q.trim();
+  // 숫자만 → 국내 종목코드
+  if (/^\d+$/.test(lq)) {
+    return J({ ok: true, results: await searchKR(lq) });
+  }
+  // 알파벳 포함 → US 우선 + KR 병행
+  if (/[A-Za-z]/.test(lq)) {
+    const [kr, us] = await Promise.all([searchKR(lq), searchUS(lq)]);
+    // US 결과 앞에, KR 뒤에 (중복 제거)
+    const seen = new Set();
+    const merged = [];
+    for (const r of [...us, ...kr]) {
+      if (!seen.has(r.symbol)) { seen.add(r.symbol); merged.push(r); }
+    }
+    return J({ ok: true, results: merged.slice(0, 12) });
+  }
+  // 한국어 → 네이버만
+  return J({ ok: true, results: await searchKR(lq) });
 }
 
 // ── fchart XML 파싱 ───────────────────────────────────────────
@@ -282,46 +331,125 @@ async function naverChart(cd, days) {
 }
 
 // ── Yahoo Quote ───────────────────────────────────────────────
+// v8/chart : 현재가·OHLCV·52주 고저 (실시간, 빠름)
+// v11/quoteSummary : PER·PBR·EPS·시총·배당·ROE 등 펀더멘털 (느리지만 정확)
+// 두 API를 병렬 호출하여 통합
 async function yahooQuote(sym) {
-  for (const host of ["query1", "query2"]) {
-    const d = await safeFetch(
-      `https://${host}.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`,
-      { headers: { "User-Agent": UA }, _timeout: 8000 }
-    );
-    if (!d) continue;
-    const res  = d.chart?.result?.[0];
-    if (!res) continue;
-    const meta = res.meta ?? {};
-    const q0   = res.indicators?.quote?.[0] ?? {};
+  const HDR = { "User-Agent": UA, "Accept": "application/json" };
 
-    const price = meta.regularMarketPrice ?? 0;
-    const prev  = meta.chartPreviousClose ?? meta.previousClose ?? price;
-    const chg   = price - prev;
-    const pct   = prev > 0 ? chg / prev * 100 : 0;
-
-    // 당일 시가: meta 우선, 없으면 quote 배열 마지막값
-    const openVal = meta.regularMarketOpen    ?? (q0.open  ?? []).filter(Boolean).at(-1) ?? 0;
-    const highVal = meta.regularMarketDayHigh ?? (q0.high  ?? []).filter(Boolean).at(-1) ?? 0;
-    const lowVal  = meta.regularMarketDayLow  ?? (q0.low   ?? []).filter(Boolean).at(-1) ?? 0;
-
-    return J({
-      ok: true, symbol: sym,
-      name: meta.longName ?? meta.shortName ?? sym,
-      price,
-      change:    Math.round(chg * 1e4) / 1e4,
-      changePct: Math.round(pct * 1e4) / 1e4,
-      open: openVal, high: highVal, low: lowVal,
-      high52: meta.fiftyTwoWeekHigh ?? 0,
-      low52:  meta.fiftyTwoWeekLow  ?? 0,
-      volume: meta.regularMarketVolume ?? 0,
-      marketCap: meta.marketCap ?? 0,
-      per: 0, pbr: 0, eps: 0, bps: 0, foreignRatio: 0,
-      currency: meta.currency ?? "USD",
-      exchange: meta.exchangeName ?? "US",
-    });
+  // ── v8 chart (현재가/OHLCV) ──────────────────────────────
+  async function fetchChart() {
+    for (const host of ["query1", "query2"]) {
+      const d = await safeFetch(
+        `https://${host}.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}` +
+        `?interval=1d&range=1d&includePrePost=false`,
+        { headers: HDR, _timeout: 8000 }
+      );
+      const res = d?.chart?.result?.[0];
+      if (res) return res;
+    }
+    return null;
   }
-  // Yahoo도 실패 시 ok:false (유일하게 ok:false 가능한 케이스)
-  return J({ ok: false, error: `${sym} 데이터를 가져올 수 없습니다` });
+
+  // ── v11 quoteSummary (펀더멘털) ──────────────────────────
+  // modules 목록: price(실시간), summaryDetail(PER/배당), defaultKeyStatistics(PBR/EPS)
+  async function fetchSummary() {
+    const mods = "price,summaryDetail,defaultKeyStatistics,financialData";
+    for (const host of ["query1", "query2"]) {
+      const d = await safeFetch(
+        `https://${host}.finance.yahoo.com/v11/finance/quoteSummary/${encodeURIComponent(sym)}` +
+        `?modules=${mods}&crumb=`,
+        { headers: HDR, _timeout: 9000 }
+      );
+      const res = d?.quoteSummary?.result?.[0];
+      if (res) return res;
+    }
+    return null;
+  }
+
+  // ── 병렬 호출 ────────────────────────────────────────────
+  const [chartRes, summaryRes] = await Promise.allSettled([fetchChart(), fetchSummary()]);
+  const chart   = chartRes.status   === "fulfilled" ? chartRes.value   : null;
+  const summary = summaryRes.status === "fulfilled" ? summaryRes.value : null;
+
+  if (!chart) return J({ ok: false, error: `${sym} 데이터를 가져올 수 없습니다` });
+
+  const meta = chart.meta ?? {};
+  const q0   = chart.indicators?.quote?.[0] ?? {};
+
+  // ── 현재가 / 등락 ─────────────────────────────────────────
+  const price = meta.regularMarketPrice ?? 0;
+  const prev  = meta.chartPreviousClose ?? meta.previousClose ?? price;
+  const chg   = price - prev;
+  const pct   = prev > 0 ? chg / prev * 100 : 0;
+
+  // ── OHLCV ────────────────────────────────────────────────
+  const last  = n => (Array.isArray(n) ? n : []).filter(x => x != null && x > 0).at(-1) ?? 0;
+  const openV = meta.regularMarketOpen    ?? last(q0.open)   ?? 0;
+  const highV = meta.regularMarketDayHigh ?? last(q0.high)   ?? 0;
+  const lowV  = meta.regularMarketDayLow  ?? last(q0.low)    ?? 0;
+  const volV  = meta.regularMarketVolume  ?? last(q0.volume) ?? 0;
+
+  // ── Yahoo raw/fmt 값 추출 헬퍼 ───────────────────────────
+  // Yahoo v11은 { raw: 숫자, fmt: "문자열" } 구조로 반환
+  const yv = obj => {
+    if (!obj) return 0;
+    if (typeof obj === "number") return Number.isFinite(obj) ? obj : 0;
+    const r = obj?.raw;
+    if (r !== undefined && r !== null && r !== "") {
+      const n = parseFloat(r);
+      return Number.isFinite(n) ? n : 0;
+    }
+    return 0;
+  };
+
+  // ── 펀더멘털 (v11 summary) ───────────────────────────────
+  const pr  = summary?.price              ?? {};  // 실시간 가격 모듈
+  const sd  = summary?.summaryDetail      ?? {};  // PER, 배당
+  const ks  = summary?.defaultKeyStatistics ?? {}; // PBR, EPS, ROE
+  const fd  = summary?.financialData      ?? {};  // 재무데이터
+
+  // PER: trailingPE(실적기반) → forwardPE(예상기반)
+  const per    = yv(sd.trailingPE) || yv(pr.trailingPE)  || yv(sd.forwardPE) || 0;
+  const fwdPer = yv(sd.forwardPE)  || 0;
+  // PBR: priceToBook
+  const pbr    = yv(ks.priceToBook) || 0;
+  // EPS: trailingEps
+  const eps    = yv(ks.trailingEps) || 0;
+  // ROE: returnOnEquity (소수점 → % 변환)
+  const roeRaw = yv(fd.returnOnEquity) || 0;
+  const roe    = roeRaw !== 0 ? Math.round(roeRaw * 1000) / 10 : 0;
+  // 배당수익률: dividendYield (소수점 → %)
+  const divRaw = yv(sd.dividendYield) || yv(sd.trailingAnnualDividendYield) || 0;
+  const divYield = divRaw !== 0 ? Math.round(divRaw * 10000) / 100 : 0;
+
+  // ── 시가총액: v11 price 모듈 우선 → v8 meta 보완 ─────────
+  const mcap = yv(pr.marketCap) || yv(sd.marketCap) || meta.marketCap || 0;
+
+  // ── 52주 고저: v11 summaryDetail → v8 meta ───────────────
+  const h52 = yv(sd.fiftyTwoWeekHigh) || meta.fiftyTwoWeekHigh || 0;
+  const l52 = yv(sd.fiftyTwoWeekLow)  || meta.fiftyTwoWeekLow  || 0;
+
+  // ── 기업명: v11 price 모듈 > v8 meta ─────────────────────
+  const name = String(pr.longName ?? pr.shortName ?? meta.longName ?? meta.shortName ?? sym);
+
+  // ── 거래소 ───────────────────────────────────────────────
+  const exch = String(pr.exchangeName ?? meta.exchangeName ?? "US");
+
+  return J({
+    ok: true, symbol: sym, name,
+    price:     Math.round(price  * 1e4) / 1e4,
+    change:    Math.round(chg    * 1e4) / 1e4,
+    changePct: Math.round(pct    * 1e4) / 1e4,
+    open: openV, high: highV, low: lowV,
+    high52: h52, low52: l52,
+    volume: volV,
+    marketCap: mcap,
+    per, fwdPer, pbr, eps, roe, divYield,
+    bps: 0, foreignRatio: 0,
+    currency: meta.currency ?? "USD",
+    exchange: exch,
+  });
 }
 
 // ── Yahoo Chart ───────────────────────────────────────────────
@@ -627,7 +755,7 @@ export default {
       if (path === "/api/search" && method === "GET") {
         const q = (url.searchParams.get("q") ?? "").trim();
         if (!q) return J({ ok: true, results: [] }); // 에러 대신 빈 결과
-        return await searchNaver(q);
+        return await searchAll(q);
       }
 
       if (path === "/api/stock" && method === "GET") {
