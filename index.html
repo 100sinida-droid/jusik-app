@@ -355,6 +355,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <a href="/guide.html" style="color:#8b949e;font-size:.73rem;text-decoration:none;white-space:nowrap;transition:color .2s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">가이드</a>
     <a href="/glossary.html" style="color:#8b949e;font-size:.73rem;text-decoration:none;white-space:nowrap;transition:color .2s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">용어사전</a>
     <a href="/sector.html" style="color:#8b949e;font-size:.73rem;text-decoration:none;white-space:nowrap;transition:color .2s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">섹터</a>
+    <a href="/samsung.html" style="color:#8b949e;font-size:.73rem;text-decoration:none;white-space:nowrap;transition:color .2s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">삼성전자</a>
+    <a href="/hynix.html" style="color:#8b949e;font-size:.73rem;text-decoration:none;white-space:nowrap;transition:color .2s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">SK하이닉스</a>
+    <a href="/top50.html" style="color:#8b949e;font-size:.73rem;text-decoration:none;white-space:nowrap;transition:color .2s" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">저평가TOP50</a>
   </nav>
 </header>
 <main>
@@ -545,14 +548,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <section class="guide-sec" id="investGuide">
     <div class="guide-hdr">
       <div class="guide-lbl">투자 핵심 원칙</div>
-      <span style="display:flex;gap:10px;flex-wrap:wrap"><a href="/guide.html" class="guide-more">투자가이드 →</a><a href="/beginner.html" class="guide-more">입문 →</a><a href="/sector.html" class="guide-more">섹터 →</a></span>
+      <span style="display:flex;gap:10px;flex-wrap:wrap"><a href="/guide.html" class="guide-more">투자가이드 →</a><a href="/beginner.html" class="guide-more">입문 →</a><a href="/sector.html" class="guide-more">섹터 →</a><a href="/top50.html" class="guide-more">저평가TOP50 →</a><a href="/per-ranking.html" class="guide-more">PER순위 →</a></span>
     </div>
     <div class="guide-grid">
-      <article class="guide-card">
+      <article class="guide-card" style="cursor:pointer" onclick="location.href='/per-ranking.html'">
         <div class="gc-icon">📊</div>
-        <h3 class="gc-title">PER로 주식 가치 판단하기</h3>
-        <p class="gc-desc">PER(주가수익비율)은 주가를 주당순이익으로 나눈 값입니다. 동일 업종 평균 대비 낮으면 저평가, 높으면 고평가를 의미합니다. 단, 성장주는 높은 PER이 정상일 수 있습니다.</p>
-        <div class="gc-tag">기초 지식</div>
+        <h3 class="gc-title">PER 낮은 주식 순위 보기</h3>
+        <p class="gc-desc">PER(주가수익비율)은 주가를 주당순이익으로 나눈 값입니다. 동일 업종 평균 대비 낮으면 저평가, 높으면 고평가를 의미합니다. PER 낮은 종목 순위를 확인하세요.</p>
+        <div class="gc-tag" style="color:var(--acc)">PER 순위 →</div>
       </article>
       <article class="guide-card">
         <div class="gc-icon">📉</div>
@@ -575,6 +578,97 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </section>
 
+
+  <!-- 📌 종목 분석 링크 섹션 -->
+  <section class="guide-sec" style="margin-top:0">
+    <div class="guide-hdr">
+      <div class="guide-lbl">🔍 종목 분석 & 투자 전략</div>
+      <a href="/ai-stocks.html" class="guide-more">AI주식 →</a>
+    </div>
+    <div class="guide-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+      <a href="/samsung.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🔷</div>
+          <h3 class="gc-title">삼성전자 주가 전망</h3>
+          <p class="gc-desc">HBM, 파운드리, 반도체 사업 분석. 목표주가·수급·실적 종합 투자 가이드</p>
+          <div class="gc-tag" style="color:var(--acc)">005930 분석 →</div>
+        </article>
+      </a>
+      <a href="/hynix.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🟢</div>
+          <h3 class="gc-title">SK하이닉스 분석</h3>
+          <p class="gc-desc">HBM 세계 1위, 엔비디아 파트너십, AI 반도체 핵심 수혜주 투자 분석</p>
+          <div class="gc-tag" style="color:var(--acc)">000660 분석 →</div>
+        </article>
+      </a>
+      <a href="/secondary-battery.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🔋</div>
+          <h3 class="gc-title">2차전지 종목 추천</h3>
+          <p class="gc-desc">LG에너지솔루션, 삼성SDI, 에코프로비엠 배터리 밸류체인 완전 분석</p>
+          <div class="gc-tag" style="color:var(--acc)">배터리 분석 →</div>
+        </article>
+      </a>
+      <a href="/undervalued.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">💎</div>
+          <h3 class="gc-title">저평가 주식 찾기</h3>
+          <p class="gc-desc">PER·PBR·ROE로 저평가 가치주 발굴하는 체계적 방법론 완전 가이드</p>
+          <div class="gc-tag" style="color:var(--acc)">저평가 분석 →</div>
+        </article>
+      </a>
+      <a href="/ai-stocks.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🤖</div>
+          <h3 class="gc-title">AI 주식 분석</h3>
+          <p class="gc-desc">엔비디아, SK하이닉스, 네이버 등 AI 테마 수혜 종목 투자 전략</p>
+          <div class="gc-tag" style="color:var(--acc)">AI 투자 →</div>
+        </article>
+      </a>
+      <a href="/top50.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🏆</div>
+          <h3 class="gc-title">저평가 주식 TOP50</h3>
+          <p class="gc-desc">재무 건전 저PER·저PBR 우량 종목 50선. 업종별 분류 완전 분석</p>
+          <div class="gc-tag" style="color:var(--acc)">TOP50 보기 →</div>
+        </article>
+      </a>
+      <a href="/per-ranking.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">📉</div>
+          <h3 class="gc-title">PER 낮은 주식 순위</h3>
+          <p class="gc-desc">업종별 PER 비교 기준 저평가 종목 순위. 진짜 저PER 우량주 발굴</p>
+          <div class="gc-tag" style="color:var(--acc)">PER 순위 →</div>
+        </article>
+      </a>
+      <a href="/roe-ranking.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">📈</div>
+          <h3 class="gc-title">ROE 높은 기업</h3>
+          <p class="gc-desc">워런 버핏이 사랑하는 ROE 15%+ 우량 기업. 지속 고ROE의 비밀</p>
+          <div class="gc-tag" style="color:var(--acc)">ROE 순위 →</div>
+        </article>
+      </a>
+      <a href="/foreign-buy.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🌏</div>
+          <h3 class="gc-title">외국인 매수 상위 종목</h3>
+          <p class="gc-desc">글로벌 기관 자금이 집중되는 한국 주식. 외국인 수급 분석 전략</p>
+          <div class="gc-tag" style="color:var(--acc)">수급 분석 →</div>
+        </article>
+      </a>
+      <a href="/institution-buy.html" style="text-decoration:none">
+        <article class="guide-card" style="cursor:pointer;transition:border-color .2s;border:1px solid var(--bd)" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--bd)'">
+          <div class="gc-icon">🏦</div>
+          <h3 class="gc-title">기관 매수 TOP30</h3>
+          <p class="gc-desc">연기금·투신·보험 스마트머니를 따라가는 기관 수급 추적 투자 전략</p>
+          <div class="gc-tag" style="color:var(--acc)">기관 분석 →</div>
+        </article>
+      </a>
+    </div>
+  </section>
+
   <!-- ★ 애드센스 광고 슬롯 2 (콘텐츠 하단) -->
   <div class="ad-slot" id="adSlot2" style="display:none"></div>
 
@@ -591,6 +685,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <p style="font-family:'JetBrains Mono',monospace;font-size:.65rem;margin-top:4px">Naver Finance · Yahoo Finance · Claude AI · Cloudflare Pages</p>
   <nav style="margin-top:12px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
     <a href="/about.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">서비스 소개</a>
+    <a href="/samsung.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">삼성전자</a>
+    <a href="/hynix.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">SK하이닉스</a>
+    <a href="/secondary-battery.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">2차전지</a>
+    <a href="/undervalued.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">저평가주식</a>
+    <a href="/ai-stocks.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">AI주식</a>
+    <a href="/top50.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">TOP50</a>
+    <a href="/per-ranking.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">PER순위</a>
+    <a href="/roe-ranking.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">ROE순위</a>
+    <a href="/foreign-buy.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">외국인매수</a>
+    <a href="/institution-buy.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">기관매수</a>
     <a href="/beginner.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">입문 가이드</a>
     <a href="/guide.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">투자 가이드</a>
     <a href="/glossary.html" style="color:#484f58;font-size:.75rem;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#484f58'">용어 사전</a>
