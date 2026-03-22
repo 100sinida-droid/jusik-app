@@ -1,8 +1,8 @@
 // ========================================
-// 주식 대시보드 - 에러 없는 버전
+// 실시간 주식 대시보드 - 실제 데이터 연동
 // ========================================
 
-console.log('🚀 Stock Dashboard Loading...');
+console.log('🚀 Loading REAL market data...');
 
 // 시간 업데이트
 function updateTime() {
@@ -20,139 +20,271 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 1000);
 
-// 주식 데이터 (네이버 금융 링크)
-const stockData = {
-    hot: [
-        { rank: 1, name: '삼성전자', code: '005930', price: '73,500원', change: '+2.1%', isPositive: true },
-        { rank: 2, name: 'SK하이닉스', code: '000660', price: '187,000원', change: '+3.8%', isPositive: true },
-        { rank: 3, name: 'LG에너지솔루션', code: '373220', price: '432,000원', change: '+1.5%', isPositive: true },
-        { rank: 4, name: '현대차', code: '005380', price: '236,000원', change: '-0.5%', isPositive: false },
-        { rank: 5, name: 'POSCO홀딩스', code: '005490', price: '289,000원', change: '+1.2%', isPositive: true }
-    ],
-    recommend: [
-        { rank: 1, name: 'NAVER', code: '035420', price: '217,000원', change: '+1.8%', isPositive: true },
-        { rank: 2, name: '카카오', code: '035720', price: '53,500원', change: '+1.5%', isPositive: true },
-        { rank: 3, name: '셀트리온', code: '068270', price: '200,000원', change: '+2.8%', isPositive: true },
-        { rank: 4, name: '삼성바이오로직스', code: '207940', price: '860,000원', change: '+0.7%', isPositive: true },
-        { rank: 5, name: '기아', code: '000270', price: '114,000원', change: '-0.2%', isPositive: false }
-    ],
-    theme: [
-        { rank: 1, name: '에코프로비엠', code: '247540', price: '328,000원', change: '+5.5%', isPositive: true },
-        { rank: 2, name: '포스코퓨처엠', code: '003670', price: '290,000원', change: '+4.2%', isPositive: true },
-        { rank: 3, name: '엘앤에프', code: '066970', price: '201,000원', change: '+3.8%', isPositive: true },
-        { rank: 4, name: '에코프로', code: '086520', price: '126,000원', change: '+4.5%', isPositive: true },
-        { rank: 5, name: '천보', code: '278280', price: '80,000원', change: '+3.2%', isPositive: true }
-    ]
-};
+// ========================================
+// 실제 API 데이터 가져오기
+// ========================================
 
-// 주식 목록 업데이트
-function updateStocksList(stocks) {
-    const stocksList = document.getElementById('stocksList');
-    if (!stocksList || !stocks) return;
+// 1. 미국 지수 실시간 데이터 (Yahoo Finance - 안정적)
+async function fetchUSIndices() {
+    console.log('📊 Fetching US indices...');
     
-    stocksList.innerHTML = stocks.map(stock => `
-        <div class="stock-item" onclick="window.open('https://finance.naver.com/item/main.naver?code=${stock.code}', '_blank')" style="cursor: pointer;">
-            <div class="stock-rank">${stock.rank}</div>
-            <div class="stock-info">
-                <div class="stock-name">${stock.name}</div>
-                <div class="stock-code">${stock.code}</div>
-            </div>
-            <div class="stock-price">${stock.price}</div>
-            <div class="stock-change ${stock.isPositive ? 'positive' : 'negative'}">${stock.change}</div>
-        </div>
-    `).join('');
-    
-    // 애니메이션
-    const items = stocksList.querySelectorAll('.stock-item');
-    items.forEach((item, index) => {
-        item.style.opacity = '0';
-        item.style.transform = 'translateX(-20px)';
-        setTimeout(() => {
-            item.style.transition = 'all 0.3s ease';
-            item.style.opacity = '1';
-            item.style.transform = 'translateX(0)';
-        }, index * 50);
-    });
-}
-
-// 탭 버튼
-let currentTab = 'hot';
-
-function initTabButtons() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+    // S&P 500
+    try {
+        const response = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1d');
+        const data = await response.json();
+        
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const meta = data.chart.result[0].meta;
+            const price = meta.regularMarketPrice;
+            const previousClose = meta.chartPreviousClose;
+            const change = price - previousClose;
+            const changePercent = (change / previousClose) * 100;
             
-            currentTab = button.dataset.tab;
-            updateStocksList(stockData[currentTab]);
-        });
-    });
+            updateIndexDisplay('sp500', { price, change, changePercent });
+            console.log(`✅ S&P 500: ${price.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`);
+        }
+    } catch (error) {
+        console.error('S&P 500 조회 실패:', error);
+    }
+    
+    await sleep(300);
+    
+    // 나스닥
+    try {
+        const response = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?interval=1d&range=1d');
+        const data = await response.json();
+        
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const meta = data.chart.result[0].meta;
+            const price = meta.regularMarketPrice;
+            const previousClose = meta.chartPreviousClose;
+            const change = price - previousClose;
+            const changePercent = (change / previousClose) * 100;
+            
+            updateIndexDisplay('nasdaq', { price, change, changePercent });
+            console.log(`✅ 나스닥: ${price.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`);
+        }
+    } catch (error) {
+        console.error('나스닥 조회 실패:', error);
+    }
 }
 
-// 새로고침 버튼
-function refreshSection(section) {
-    if (!window.event) return;
+// 2. 코스피/코스닥 (Yahoo Finance Korea)
+async function fetchKoreanIndices() {
+    console.log('📊 Fetching Korean indices...');
     
-    const button = window.event.currentTarget;
-    button.style.transform = 'rotate(360deg)';
-    button.style.transition = 'transform 0.5s ease';
+    // 코스피
+    try {
+        const response = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EKS11?interval=1d&range=1d');
+        const data = await response.json();
+        
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const meta = data.chart.result[0].meta;
+            const price = meta.regularMarketPrice;
+            const previousClose = meta.chartPreviousClose;
+            const change = price - previousClose;
+            const changePercent = (change / previousClose) * 100;
+            
+            updateIndexDisplay('kospi', { price, change, changePercent });
+            console.log(`✅ 코스피: ${price.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`);
+        }
+    } catch (error) {
+        console.error('코스피 조회 실패:', error);
+    }
     
-    setTimeout(() => {
-        button.style.transform = 'rotate(0deg)';
-    }, 500);
+    await sleep(300);
     
-    console.log(`🔄 Refreshing ${section}...`);
+    // 코스닥
+    try {
+        const response = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EKQ11?interval=1d&range=1d');
+        const data = await response.json();
+        
+        if (data.chart && data.chart.result && data.chart.result[0]) {
+            const meta = data.chart.result[0].meta;
+            const price = meta.regularMarketPrice;
+            const previousClose = meta.chartPreviousClose;
+            const change = price - previousClose;
+            const changePercent = (change / previousClose) * 100;
+            
+            updateIndexDisplay('kosdaq', { price, change, changePercent });
+            console.log(`✅ 코스닥: ${price.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`);
+        }
+    } catch (error) {
+        console.error('코스닥 조회 실패:', error);
+    }
 }
 
-// 전략 페이지 링크
-function initStrategyLinks() {
-    const links = document.querySelectorAll('.strategy-link');
+// 3. 한국 주식 실시간 데이터
+async function fetchKoreanStocks() {
+    console.log('📈 Fetching Korean stocks...');
     
-    links.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const name = link.closest('.strategy-card').querySelector('h3').textContent;
-            const pages = {
-                '차트 분석': 'chart-analysis.html',
-                '가치투자': 'value-investing.html',
-                '손익 관리': 'risk-management.html',
-                '배당투자': 'dividend-investing.html'
-            };
-            if (pages[name]) {
-                window.open(pages[name], '_blank');
+    const stocks = [
+        { code: '005930', name: '삼성전자', symbol: '005930.KS' },
+        { code: '000660', name: 'SK하이닉스', symbol: '000660.KS' },
+        { code: '373220', name: 'LG에너지솔루션', symbol: '373220.KS' },
+        { code: '035420', name: 'NAVER', symbol: '035420.KS' },
+        { code: '035720', name: '카카오', symbol: '035720.KS' }
+    ];
+    
+    for (let i = 0; i < stocks.length; i++) {
+        const stock = stocks[i];
+        
+        try {
+            const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${stock.symbol}?interval=1d&range=1d`);
+            const data = await response.json();
+            
+            if (data.chart && data.chart.result && data.chart.result[0]) {
+                const meta = data.chart.result[0].meta;
+                const price = meta.regularMarketPrice;
+                const previousClose = meta.chartPreviousClose;
+                const change = price - previousClose;
+                const changePercent = (change / previousClose) * 100;
+                
+                updateStockDisplay(i, stock.code, stock.name, price, changePercent);
+                console.log(`✅ ${stock.name}: ${Math.round(price).toLocaleString()}원 (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`);
             }
-        });
-    });
+        } catch (error) {
+            console.error(`${stock.name} 조회 실패:`, error);
+        }
+        
+        await sleep(200);
+    }
 }
 
-// 학습 태그
-function initLearningTags() {
-    const tags = document.querySelectorAll('.tag');
+// ========================================
+// UI 업데이트 함수
+// ========================================
+
+function updateIndexDisplay(id, data) {
+    // 지수 카드의 부모 컨테이너 찾기
+    const container = document.querySelector('[style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"]');
+    if (!container) return;
     
-    tags.forEach(tag => {
-        tag.addEventListener('click', () => {
-            alert(`${tag.textContent.trim()} 학습 자료\n\n투자 전략 섹션의 관련 페이지를 참고하세요!`);
-        });
+    const cards = container.querySelectorAll('[style*="padding: 1.5rem"]');
+    
+    cards.forEach(card => {
+        const nameDiv = card.querySelector('div[style*="color: #8fa3bf"]');
+        if (!nameDiv) return;
+        
+        const text = nameDiv.textContent.trim();
+        const shouldUpdate = 
+            (id === 'kospi' && text === '코스피') ||
+            (id === 'kosdaq' && text === '코스닥') ||
+            (id === 'sp500' && text === 'S&P 500') ||
+            (id === 'nasdaq' && text === '나스닥');
+        
+        if (shouldUpdate) {
+            // 가격 업데이트
+            const priceDiv = card.querySelector('div[style*="font-size: 1.8rem"]');
+            if (priceDiv) {
+                priceDiv.textContent = data.price.toFixed(2);
+            }
+            
+            // 등락 업데이트
+            const changeDiv = card.querySelector('div[style*="margin-top: 0.5rem"]');
+            if (changeDiv) {
+                const isPositive = data.change >= 0;
+                const arrow = isPositive ? '▲' : '▼';
+                const sign = isPositive ? '+' : '';
+                changeDiv.textContent = `${arrow} ${Math.abs(data.change).toFixed(2)} (${sign}${data.changePercent.toFixed(2)}%)`;
+                
+                // 색상 변경
+                if (isPositive) {
+                    changeDiv.style.color = 'var(--accent-success)';
+                    card.style.background = 'rgba(0, 255, 136, 0.1)';
+                    card.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+                } else {
+                    changeDiv.style.color = 'var(--accent-danger)';
+                    card.style.background = 'rgba(255, 51, 102, 0.1)';
+                    card.style.borderColor = 'rgba(255, 51, 102, 0.3)';
+                }
+            }
+        }
     });
 }
 
+function updateStockDisplay(index, code, name, price, changePercent) {
+    // 종목 리스트 컨테이너 찾기
+    const stockList = document.querySelector('[style*="display: flex; flex-direction: column"]');
+    if (!stockList) return;
+    
+    const stockItems = stockList.querySelectorAll('[onclick*="finance.naver.com"]');
+    
+    if (stockItems[index]) {
+        const item = stockItems[index];
+        
+        // 가격 업데이트
+        const priceDiv = item.querySelector('div[style*="font-size: 1.2rem"]');
+        if (priceDiv) {
+            priceDiv.textContent = `${Math.round(price).toLocaleString()}원`;
+        }
+        
+        // 등락률 업데이트
+        const changeDivs = item.querySelectorAll('div[style*="padding: 0.5rem"]');
+        const changeDiv = changeDivs[changeDivs.length - 1]; // 마지막 div가 등락률
+        
+        if (changeDiv) {
+            const isPositive = changePercent >= 0;
+            changeDiv.textContent = `${isPositive ? '+' : ''}${changePercent.toFixed(1)}%`;
+            
+            if (isPositive) {
+                changeDiv.style.background = 'rgba(0,255,136,0.1)';
+                changeDiv.style.color = 'var(--accent-success)';
+            } else {
+                changeDiv.style.background = 'rgba(255,51,102,0.1)';
+                changeDiv.style.color = 'var(--accent-danger)';
+            }
+        }
+    }
+}
+
+// ========================================
+// 주식 검색
+// ========================================
+function searchStock() {
+    const query = document.getElementById('stockSearch').value.trim();
+    if (query) {
+        window.open(`https://finance.naver.com/search/searchList.naver?query=${encodeURIComponent(query)}`, '_blank');
+    } else {
+        alert('종목명 또는 종목코드를 입력하세요.');
+    }
+}
+
+// Enter 키로 검색
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('stockSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchStock();
+        });
+    }
+});
+
+// ========================================
+// 유틸리티
+// ========================================
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ========================================
 // 초기화
-function initializeDashboard() {
-    console.log('✅ Dashboard Initialized!');
+// ========================================
+async function initializeDashboard() {
+    console.log('🚀 Initializing Dashboard with REAL DATA...');
     
-    // 초기 주식 목록 표시
-    updateStocksList(stockData.hot);
-    
-    // 이벤트 리스너
-    initTabButtons();
-    initStrategyLinks();
-    initLearningTags();
-    
-    console.log('📊 TradingView 위젯으로 실시간 시장 데이터를 확인하세요!');
-    console.log('💡 종목 클릭 시 네이버 금융으로 실시간 정보 확인 가능');
+    try {
+        // 순차적으로 데이터 로드
+        await fetchUSIndices();
+        await fetchKoreanIndices();
+        await fetchKoreanStocks();
+        
+        console.log('✅ All REAL data loaded successfully!');
+        console.log('💡 모든 가격은 Yahoo Finance API에서 실시간으로 가져옵니다.');
+        
+    } catch (error) {
+        console.error('초기화 에러:', error);
+    }
 }
 
 // 페이지 로드 시 실행
@@ -162,9 +294,13 @@ if (document.readyState === 'loading') {
     initializeDashboard();
 }
 
-console.log('Stock Dashboard Ready! 🎯');
-console.log('');
-console.log('📌 실시간 데이터 확인 방법:');
-console.log('1. 화면의 TradingView 차트 위젯 - 실시간 시장 데이터');
-console.log('2. 종목 클릭 - 네이버 금융으로 실시간 정보 확인');
-console.log('3. 전략 링크 클릭 - 투자 전략 상세 페이지');
+// 자동 갱신 (1분마다)
+setInterval(() => {
+    console.log('🔄 Auto-refreshing real data...');
+    fetchUSIndices();
+    fetchKoreanIndices();
+    fetchKoreanStocks();
+}, 60000);
+
+console.log('📊 Stock Dashboard Ready!');
+console.log('🔄 실시간 데이터는 1분마다 자동 갱신됩니다.');
