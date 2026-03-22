@@ -40,12 +40,12 @@
                   <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
                   {
                   "symbols": [
-                    ["Korea Stock Exchange:KOSPI|1D"],
-                    ["Korea Stock Exchange:KOSDAQ|1D"],
-                    ["FOREXCOM:SPXUSD|1D"],
-                    ["NASDAQ:IXIC|1D"],
-                    ["FOREXCOM:DJI|1D"],
-                    ["NASDAQ:AAPL|1D"]
+                    ["KRX:KOSPI|1D", "코스피"],
+                    ["KRX:KOSDAQ|1D", "코스닥"],
+                    ["FOREXCOM:SPXUSD|1D", "S&P 500"],
+                    ["NASDAQ:IXIC|1D", "나스닥"],
+                    ["FOREXCOM:DJI|1D", "다우존스"],
+                    ["NASDAQ:AAPL|1D", "애플"]
                   ],
                   "chartOnly": false,
                   "width": "100%",
@@ -117,19 +117,49 @@
                     ✅ 시가총액, 거래량, 등락률, PER, PBR 등으로 <strong>정렬 및 필터링</strong> 가능<br>
                     ✅ 종목 클릭 시 <strong>상세 차트 및 재무 정보</strong> 확인
                 </p>
+                <!-- TradingView 한국 마켓 위젯 -->
                 <div class="tradingview-widget-container">
                   <div class="tradingview-widget-container__widget"></div>
-                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
+                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
                   {
                   "width": "100%",
                   "height": "700",
-                  "defaultColumn": "overview",
-                  "defaultScreen": "general",
-                  "market": "korea",
-                  "showToolbar": true,
+                  "symbolsGroups": [
+                    {
+                      "name": "코스피 주요 종목",
+                      "symbols": [
+                        {"name": "KRX:005930", "displayName": "삼성전자"},
+                        {"name": "KRX:000660", "displayName": "SK하이닉스"},
+                        {"name": "KRX:373220", "displayName": "LG에너지솔루션"},
+                        {"name": "KRX:207940", "displayName": "삼성바이오로직스"},
+                        {"name": "KRX:005380", "displayName": "현대차"},
+                        {"name": "KRX:005490", "displayName": "POSCO홀딩스"},
+                        {"name": "KRX:051910", "displayName": "LG화학"},
+                        {"name": "KRX:006400", "displayName": "삼성SDI"},
+                        {"name": "KRX:035420", "displayName": "NAVER"},
+                        {"name": "KRX:035720", "displayName": "카카오"}
+                      ]
+                    },
+                    {
+                      "name": "코스닥 주요 종목",
+                      "symbols": [
+                        {"name": "KRX:068270", "displayName": "셀트리온"},
+                        {"name": "KRX:086520", "displayName": "에코프로"},
+                        {"name": "KRX:247540", "displayName": "에코프로비엠"},
+                        {"name": "KRX:066970", "displayName": "엘앤에프"},
+                        {"name": "KRX:091990", "displayName": "셀트리온헬스케어"},
+                        {"name": "KRX:196170", "displayName": "알테오젠"},
+                        {"name": "KRX:058470", "displayName": "리노공업"},
+                        {"name": "KRX:095340", "displayName": "ISC"},
+                        {"name": "KRX:293490", "displayName": "카카오게임즈"},
+                        {"name": "KRX:112040", "displayName": "위메이드"}
+                      ]
+                    }
+                  ],
+                  "showSymbolLogo": true,
                   "colorTheme": "dark",
-                  "locale": "kr",
-                  "isTransparent": true
+                  "isTransparent": true,
+                  "locale": "kr"
                   }
                   </script>
                 </div>
@@ -137,33 +167,54 @@
             
             <!-- 한국 급등주 -->
             <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-                <h3 style="color: var(--accent-success); margin-bottom: 1rem;">🔥 한국 급등주 & 인기 종목 (실시간)</h3>
+                <h3 style="color: var(--accent-success); margin-bottom: 1rem;">🔥 한국 주요 종목 실시간 현황</h3>
+                <p style="color: #8fa3bf; margin-bottom: 1rem; font-size: 0.9rem;">
+                    ✅ 실시간 가격, 등락률, 거래량 확인<br>
+                    ✅ 종목 클릭 시 상세 차트 보기
+                </p>
+                <!-- TradingView 한국 시장 실시간 -->
                 <div class="tradingview-widget-container">
                   <div class="tradingview-widget-container__widget"></div>
-                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-hotlists.js" async>
+                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
                   {
-                  "colorTheme": "dark",
-                  "dateRange": "1D",
-                  "exchange": "KRX",
-                  "showChart": true,
-                  "locale": "kr",
+                  "symbol": "KRX:005930",
                   "width": "100%",
-                  "height": "600",
-                  "largeChartUrl": "",
+                  "height": "220",
+                  "locale": "kr",
+                  "dateRange": "1D",
+                  "colorTheme": "dark",
                   "isTransparent": true,
-                  "showSymbolLogo": true,
-                  "showFloatingTooltip": false,
-                  "plotLineColorGrowing": "rgba(0, 255, 136, 1)",
-                  "plotLineColorFalling": "rgba(255, 51, 102, 1)",
-                  "gridLineColor": "rgba(240, 243, 250, 0)",
-                  "scaleFontColor": "rgba(120, 123, 134, 1)",
-                  "belowLineFillColorGrowing": "rgba(0, 255, 136, 0.12)",
-                  "belowLineFillColorFalling": "rgba(255, 51, 102, 0.12)",
-                  "belowLineFillColorGrowingBottom": "rgba(0, 255, 136, 0)",
-                  "belowLineFillColorFallingBottom": "rgba(255, 51, 102, 0)",
-                  "symbolActiveColor": "rgba(0, 240, 255, 0.12)"
+                  "autosize": false,
+                  "largeChartUrl": ""
                   }
                   </script>
+                </div>
+                
+                <div style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                    <div onclick="window.open('https://finance.naver.com/item/main.naver?code=005930', '_blank')" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">삼성전자 (005930)</div>
+                        <div style="color: #8fa3bf; font-size: 0.9rem;">클릭하여 실시간 차트 보기 →</div>
+                    </div>
+                    <div onclick="window.open('https://finance.naver.com/item/main.naver?code=000660', '_blank')" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">SK하이닉스 (000660)</div>
+                        <div style="color: #8fa3bf; font-size: 0.9rem;">클릭하여 실시간 차트 보기 →</div>
+                    </div>
+                    <div onclick="window.open('https://finance.naver.com/item/main.naver?code=373220', '_blank')" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">LG에너지솔루션 (373220)</div>
+                        <div style="color: #8fa3bf; font-size: 0.9rem;">클릭하여 실시간 차트 보기 →</div>
+                    </div>
+                    <div onclick="window.open('https://finance.naver.com/item/main.naver?code=035420', '_blank')" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">NAVER (035420)</div>
+                        <div style="color: #8fa3bf; font-size: 0.9rem;">클릭하여 실시간 차트 보기 →</div>
+                    </div>
+                    <div onclick="window.open('https://finance.naver.com/item/main.naver?code=035720', '_blank')" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">카카오 (035720)</div>
+                        <div style="color: #8fa3bf; font-size: 0.9rem;">클릭하여 실시간 차트 보기 →</div>
+                    </div>
+                    <div onclick="window.open('https://finance.naver.com/item/main.naver?code=068270', '_blank')" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">셀트리온 (068270)</div>
+                        <div style="color: #8fa3bf; font-size: 0.9rem;">클릭하여 실시간 차트 보기 →</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -211,19 +262,38 @@
                 <p style="color: #8fa3bf; margin-bottom: 1rem; font-size: 0.9rem;">
                     한국, 미국, 일본, 유럽 등 <strong>전세계 모든 주식</strong>을 검색하고 실시간 차트를 확인하세요.
                 </p>
+                <!-- TradingView 심볼 검색 -->
                 <div class="tradingview-widget-container">
                   <div class="tradingview-widget-container__widget"></div>
-                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-search.js" async>
+                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
                   {
+                  "symbol": "KRX:005930",
                   "width": "100%",
-                  "height": "550",
-                  "defaultMarket": "KRX",
-                  "showSymbolLogo": true,
+                  "locale": "kr",
                   "colorTheme": "dark",
-                  "isTransparent": true,
-                  "locale": "kr"
+                  "isTransparent": true
                   }
                   </script>
+                </div>
+                
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(0,240,255,0.05); border: 1px solid var(--border-color); border-radius: 8px;">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">🔍 주식 검색 방법</h4>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                            <strong>1. 네이버 금융 검색 (아래 입력창 사용)</strong>
+                            <p style="color: #8fa3bf; margin-top: 0.5rem; font-size: 0.9rem;">종목명 또는 종목코드를 입력하여 네이버 금융에서 검색</p>
+                        </div>
+                        <div style="padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                            <strong>2. 인베스팅닷컴 (investing.com)</strong>
+                            <p style="color: #8fa3bf; margin-top: 0.5rem; font-size: 0.9rem;">전세계 모든 주식 검색 및 상세 정보 확인 가능</p>
+                            <button onclick="window.open('https://kr.investing.com/search/?q=', '_blank')" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--bg-primary); border: none; border-radius: 6px; cursor: pointer;">인베스팅닷컴 열기 →</button>
+                        </div>
+                        <div style="padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                            <strong>3. 야후 파이낸스 (finance.yahoo.com)</strong>
+                            <p style="color: #8fa3bf; margin-top: 0.5rem; font-size: 0.9rem;">미국 주식 전문 검색 사이트</p>
+                            <button onclick="window.open('https://finance.yahoo.com/lookup', '_blank')" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--bg-primary); border: none; border-radius: 6px; cursor: pointer;">야후 파이낸스 열기 →</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -275,25 +345,57 @@
         <!-- 섹션 6: 실시간 뉴스 -->
         <section class="card">
             <div class="card-header">
-                <h2><span class="section-number">06</span> 실시간 금융 뉴스</h2>
+                <h2><span class="section-number">06</span> 실시간 금융 뉴스 (한국어)</h2>
             </div>
             
-            <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px;">
-                <h3 style="color: var(--accent-primary); margin-bottom: 1rem;">📰 글로벌 시장 뉴스 (실시간)</h3>
-                <div class="tradingview-widget-container">
-                  <div class="tradingview-widget-container__widget"></div>
-                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-                  {
-                  "feedMode": "market",
-                  "market": "stock",
-                  "colorTheme": "dark",
-                  "isTransparent": true,
-                  "displayMode": "regular",
-                  "width": "100%",
-                  "height": "550",
-                  "locale": "kr"
-                  }
-                  </script>
+            <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <h3 style="color: var(--accent-primary); margin-bottom: 1rem;">📰 한국 주요 경제 뉴스</h3>
+                <div id="koreanNews" style="display: grid; gap: 1rem;">
+                    <!-- 한국 경제 뉴스 -->
+                    <div onclick="window.open('https://www.hankyung.com/stock', '_blank')" style="padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <span style="padding: 0.25rem 0.75rem; background: rgba(255,51,102,0.2); border-radius: 4px; font-size: 0.85rem; font-weight: 700;">증시</span>
+                            <span style="color: #8fa3bf; font-size: 0.9rem;">한국경제</span>
+                        </div>
+                        <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">📊 한국경제 증시 뉴스 →</h4>
+                        <p style="color: #8fa3bf; font-size: 0.9rem;">코스피, 코스닥 및 국내 주식시장 실시간 뉴스</p>
+                    </div>
+                    
+                    <div onclick="window.open('https://www.mk.co.kr/news/stock/', '_blank')" style="padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <span style="padding: 0.25rem 0.75rem; background: rgba(0,255,136,0.2); border-radius: 4px; font-size: 0.85rem; font-weight: 700;">증시</span>
+                            <span style="color: #8fa3bf; font-size: 0.9rem;">매일경제</span>
+                        </div>
+                        <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">📊 매일경제 증시 뉴스 →</h4>
+                        <p style="color: #8fa3bf; font-size: 0.9rem;">국내 증시 및 기업 분석 뉴스</p>
+                    </div>
+                    
+                    <div onclick="window.open('https://www.edaily.co.kr/stock/', '_blank')" style="padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <span style="padding: 0.25rem 0.75rem; background: rgba(0,240,255,0.2); border-radius: 4px; font-size: 0.85rem; font-weight: 700;">증시</span>
+                            <span style="color: #8fa3bf; font-size: 0.9rem;">이데일리</span>
+                        </div>
+                        <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">📊 이데일리 증시 뉴스 →</h4>
+                        <p style="color: #8fa3bf; font-size: 0.9rem;">실시간 증시 속보 및 시황 분석</p>
+                    </div>
+                    
+                    <div onclick="window.open('https://www.yna.co.kr/economy/stock', '_blank')" style="padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <span style="padding: 0.25rem 0.75rem; background: rgba(255,170,0,0.2); border-radius: 4px; font-size: 0.85rem; font-weight: 700;">경제</span>
+                            <span style="color: #8fa3bf; font-size: 0.9rem;">연합뉴스</span>
+                        </div>
+                        <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">📰 연합뉴스 경제 뉴스 →</h4>
+                        <p style="color: #8fa3bf; font-size: 0.9rem;">국내외 경제 및 증시 종합 뉴스</p>
+                    </div>
+                    
+                    <div onclick="window.open('https://finance.naver.com/news/', '_blank')" style="padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <span style="padding: 0.25rem 0.75rem; background: rgba(0,255,136,0.2); border-radius: 4px; font-size: 0.85rem; font-weight: 700;">종합</span>
+                            <span style="color: #8fa3bf; font-size: 0.9rem;">네이버 금융</span>
+                        </div>
+                        <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">📱 네이버 금융 뉴스 →</h4>
+                        <p style="color: #8fa3bf; font-size: 0.9rem;">실시간 주식 뉴스 및 시황 정보</p>
+                    </div>
                 </div>
             </div>
         </section>
