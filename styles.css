@@ -970,6 +970,196 @@ body {
     color: var(--accent);
 }
 
+/* ==================== FILTER PANEL ==================== */
+.filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0.625rem 1.25rem;
+    background: var(--white);
+    border: 1px solid var(--gray-lighter);
+    border-radius: var(--radius-md);
+    color: var(--gray);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: var(--font-display);
+}
+
+.filter-toggle:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.filter-panel {
+    background: var(--white);
+    border: 1px solid var(--gray-lighter);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-item label {
+    display: block;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+.filter-item select {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid var(--gray-lighter);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--dark);
+    background: var(--white);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.filter-item select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.filter-apply,
+.filter-reset {
+    padding: 0.625rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-display);
+}
+
+.filter-apply {
+    background: var(--gradient-primary);
+    color: var(--white);
+}
+
+.filter-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.filter-reset {
+    background: transparent;
+    color: var(--gray);
+    border: 1px solid var(--gray-lighter);
+}
+
+.filter-reset:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* ==================== SEARCH RESULTS PAGE ==================== */
+#searchResults,
+#infoPage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--white);
+    z-index: 2000;
+    overflow-y: auto;
+}
+
+.search-results-container,
+.info-page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    padding-top: calc(80px + var(--spacing-lg));
+}
+
+.search-header,
+.info-page-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0.625rem 1.25rem;
+    background: var(--white);
+    border: 1px solid var(--gray-lighter);
+    border-radius: var(--radius-md);
+    color: var(--gray);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: var(--font-display);
+}
+
+.back-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.search-results-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.info-page-content {
+    background: var(--light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+}
+
+.info-section {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.info-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.info-section p {
+    color: var(--gray);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-sm);
+}
+
+.loading {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--gray);
+    font-size: 1.125rem;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     .nav-links {
