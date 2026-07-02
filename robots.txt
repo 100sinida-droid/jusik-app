@@ -8,4 +8,4 @@ Allow: /
 Disallow: /api/
 
 # 사이트맵 위치 (도메인 연결 후 이 주소를 새 도메인으로 바꾸세요)
-Sitemap: https://auto-shorts.pages.dev/sitemap.xml
+Sitemap: https://stockmind.kr/sitemap.xml
