@@ -1,0 +1,11 @@
+# 한강 수온 라이브 - robots.txt
+# 모든 검색엔진 크롤러 허용 (구글, 네이버 Yeti, 빙 등)
+
+User-agent: *
+Allow: /
+
+# API 엔드포인트는 색인 불필요 (검색 결과에 뜰 필요 없음)
+Disallow: /api/
+
+# 사이트맵 위치 (도메인 연결 후 이 주소를 새 도메인으로 바꾸세요)
+Sitemap: https://auto-shorts.pages.dev/sitemap.xml
