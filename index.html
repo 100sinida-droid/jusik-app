@@ -8,6 +8,9 @@
 <meta name="naver-site-verification" content="ab3caa75fb4a359ff2acfe62b6a137f727a975a4" />
 <!-- 구글 서치콘솔 사이트 소유권 확인 -->
 <meta name="google-site-verification" content="qlfctqKrKedoLwVcioP7OYyDjpQWo5ahDNcUxI_2Q4w" />
+<!-- 구글 애드센스 -->
+<meta name="google-adsense-account" content="ca-pub-7938956361770773">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7938956361770773" crossorigin="anonymous"></script>
 
 <!-- ══ SEO 기본 ══ -->
 <title>한강 수온 실시간 | 오늘 한강 온도·수영 가능 여부·라이브 CCTV</title>
@@ -120,6 +123,9 @@
   .brand{font-weight:800;font-size:15px;letter-spacing:.06em}
   .brand em{color:var(--moon);font-style:normal}
   .head-right{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim)}
+  .nav-guide{color:var(--moon);text-decoration:none;font-size:12px;padding:4px 10px;
+    border:1px solid var(--line);border-radius:99px;white-space:nowrap}
+  .nav-guide:hover{border-color:var(--moon)}
   .src-badge{padding:3px 9px;border:1px solid var(--line);border-radius:99px;font-size:11px}
   .src-badge.live{border-color:var(--moon);color:var(--moon)}
   button.ghost{background:none;border:1px solid var(--line);color:var(--ink);
@@ -316,6 +322,7 @@
 <header>
   <div class="brand">한강 수온 <em>LIVE</em></div>
   <div class="head-right">
+    <a href="guide/index.html" class="nav-guide">📚 정보 가이드</a>
     <span class="visit-count" id="visitCount" title="오늘 이 사이트에 들어온 사람 수">👣 --</span>
     <span class="src-badge" id="srcBadge">불러오는 중</span>
     <button class="ghost" id="refreshBtn">새로고침</button>
@@ -561,6 +568,14 @@
 
 <footer>
   <strong>데이터 출처</strong> — 코스피/종목 시세는 야후 파이낸스를, 한강 수온은 서울시 열린데이터광장의 수질자동측정소 자료를 Cloudflare가 중계해 제공합니다. 수온은 매시간 갱신되는 확정 전 실시간 자료(참고용)이며, 여러 측정소의 평균값입니다. 실측 조회에 실패하면 계절 평균 추정치로 자동 전환되고 화면에 그 사실이 표시됩니다. 시세는 투자 판단의 근거로 사용하지 마세요.<br>
+  <span style="display:inline-block;margin:10px 0">
+    <a href="guide/index.html">정보 가이드</a> ·
+    <a href="guide/about.html">소개</a> ·
+    <a href="guide/contact.html">문의</a> ·
+    <a href="guide/privacy.html">개인정보처리방침</a> ·
+    <a href="guide/terms.html">이용약관</a> ·
+    <a href="guide/disclaimer.html">면책조항</a>
+  </span><br>
   마음이 많이 힘든 날엔 잠시 쉬어가요. 자살예방 상담전화 <strong>109</strong> · 정신건강 상담 <strong>1577-0199</strong> (24시간)
 </footer>
 
