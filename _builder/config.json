@@ -8,5 +8,8 @@
   "output_dir": "..",
   "api_endpoint": "https://apis.data.go.kr/1352000/ODMS_DATA_07_1/callData07_1Api",
   "rows_per_page": 500,
-  "mode": "compact"
+  "mode": "compact",
+  "naver_site_verification": "",
+  "google_site_verification": "",
+  "daum_webmaster": ""
 }
