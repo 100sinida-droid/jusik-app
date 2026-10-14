@@ -896,9 +896,10 @@ def section_of(path):
         path, "info" if path.startswith("pages/") else "")
 
 
+ASSET_VER = hashlib.sha1(b"".join((ROOT / "static" / n).read_bytes() for n in ("style.css", "site.js"))).hexdigest()[:8]
 SECTION_ART = {"bongan": "bongan", "funeral": "funeral", "price": "price", "recommend": "recommend", "ranking": "ranking",
                "guide": "guide", "search": "search", "info": "info"}
-EMBLEM = ('<svg class="emblem" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="12" fill="#1f4d3f"/>'
+EMBLEM = ('<svg class="emblem" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="12" fill="#1f4d3f"/>'
           '<circle cx="33" cy="15" r="5" fill="#d8b46a"/>'
           '<path d="M7 24c6-1 11-4 17-10 6 6 11 9 17 10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
           '<path d="M12 24v14h24V24M9 38h30" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
@@ -959,13 +960,13 @@ def layout(path, title, description, body, crumbs=None, jsonld=None, depth=0, no
 <meta name="theme-color" content="#1f4d3f">
 {robots}
 <link rel="icon" href="{FAVICON}" type="image/svg+xml">
-<script>try{{var s=localStorage.getItem("fs");if(s)document.documentElement.setAttribute("data-fs",s)}}catch(e){{}}</script>
+<script>try{{var s=localStorage.getItem("fs");if(s)document.documentElement.setAttribute("data-fs",s)}}catch(e){{}}try{{if(navigator.serviceWorker)navigator.serviceWorker.getRegistrations().then(function(a){{a.forEach(function(r){{r.unregister()}});if(a.length&&window.caches)caches.keys().then(function(k){{k.forEach(function(n){{caches.delete(n)}})}})}})}}catch(e){{}}</script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap">
-<link rel="stylesheet" href="{r}static/style.css">
+<link rel="stylesheet" href="{r}static/style.css?v={ASSET_VER}">
 {adsense_head()}
 {ld_html}
 </head>
@@ -999,14 +1000,44 @@ def layout(path, title, description, body, crumbs=None, jsonld=None, depth=0, no
   </div>
   <div class="wrap f-bottom"><span>© {TODAY[:4]} {E(SITE)}</span><span>데이터 갱신일 {TODAY}</span><span>{art.MAP_CREDIT}</span></div>
 </footer>
-<script src="{r}static/site.js" defer></script>
+<script src="{r}static/site.js?v={ASSET_VER}" defer></script>
 </body>
 </html>
 """
 
 
 
+_MAILTO = re.compile(r'<a [^>]*href="mailto:[^"]*"[^>]*>.*?</a>', re.S)
+_EMAIL = re.compile(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+')
+
+
+def email_off(html_text):
+    """Cloudflare 이메일 주소 난독화가 끼워 넣는 스크립트(email-decode)는 지도 SVG 링크에서 오류를 낸다.
+    이메일 부분을 email_off 주석으로 감싸 그 스크립트가 들어오지 않게 한다."""
+    parts = []
+    last = 0
+    for m in _MAILTO.finditer(html_text):
+        parts.append(html_text[last:m.start()])
+        parts.append("<!--email_off-->" + m.group(0) + "<!--/email_off-->")
+        last = m.end()
+    parts.append(html_text[last:])
+    out = "".join(parts)
+    # 링크가 아닌 본문 속 이메일도 감싼다 (이미 감싼 구간과 head 안은 건너뜀)
+    head_end = out.find("<body")
+    segs = re.split(r"(<!--email_off-->.*?<!--/email_off-->)", out, flags=re.S)
+    res = []
+    pos = 0
+    for seg in segs:
+        if not seg.startswith("<!--email_off-->"):
+            seg = re.sub(r"(>[^<]*?)(" + _EMAIL.pattern + r")", lambda m: m.group(1) + "<!--email_off-->" + m.group(2) + "<!--/email_off-->", seg) if pos > head_end else seg
+        res.append(seg)
+        pos += len(seg)
+    return "".join(res)
+
+
 def write(out_dir, path, content):
+    if path.endswith(".html"):
+        content = email_off(content)
     p = out_dir / path
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf-8")
