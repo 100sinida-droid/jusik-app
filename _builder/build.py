@@ -3488,7 +3488,7 @@ def seo_files(out):
     if URL_READY:
         (out / "sitemap.xml").write_text("\n".join(xml), encoding="utf-8")
         daum = (CONFIG.get("daum_webmaster") or "").strip()
-        (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nDisallow: /stats\nDisallow: /api/\nDisallow: /_builder/\n\nSitemap: {SITE_URL}/sitemap.xml\n"
+        (out / "robots.txt").write_text(f"User-agent: Claude-SearchBot\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: Claude-User\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: ClaudeBot\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: OAI-SearchBot\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: ChatGPT-User\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: PerplexityBot\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: Bingbot\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: Yeti\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: Googlebot\nAllow: /\nDisallow: /stats\nDisallow: /api/\n\nUser-agent: *\nAllow: /\nDisallow: /stats\nDisallow: /api/\nDisallow: /_builder/\n\nSitemap: {SITE_URL}/sitemap.xml\n"
                                         + (f"\n#DaumWebMasterTool:{daum}\n" if daum else ""), encoding="utf-8")
     else:
         print("※ config.json 의 site_url 을 실제 주소로 바꾸면 sitemap.xml 이 만들어집니다.")
@@ -4106,7 +4106,7 @@ def partner_fac_cta(f, r):
 
 
 GENERATED_DIRS = ["facility", "region", "type", "feature", "guides", "pages", "static", "data", "compare", "funeral", "tools", "bongan", "info", "assets", "place", "area", "partner"]
-GENERATED_FILES = ["index.html", "404.html", "robots.txt", "sitemap.xml", "rss.xml", "ads.txt", ".nojekyll", ".gitignore"]
+GENERATED_FILES = ["index.html", "404.html", "llms.txt", "robots.txt", "sitemap.xml", "rss.xml", "ads.txt", ".nojekyll", ".gitignore"]
 FUNERAL = []
 
 
@@ -4186,8 +4186,23 @@ def build_site(facs):
     (out / ".gitignore").write_text("__pycache__/\n*.pyc\n_builder/inspect_result.txt\n", encoding="utf-8")
     if CONFIG.get("indexnow_key"):
         (out / f'{CONFIG["indexnow_key"]}.txt').write_text(CONFIG["indexnow_key"], encoding="utf-8")
+    write_llms_txt(out)
     write_manifest(out)
     return out
+
+
+def write_llms_txt(out):
+    """AI 검색(Claude·ChatGPT 등)이 사이트 구조를 빨리 이해하도록 주요 페이지를 정리한 llms.txt"""
+    u = lambda p: f"{SITE_URL}/{seo_url(newpath(p))}"
+    lines = [f"# {SITE}", "",
+             "> 전국 봉안당(납골당) 694곳, 장례식장 1,100여 곳, 화장장 62곳의 가격·위치·주차·참배시간을 공공데이터로 정리한 한국어 장례 정보 사이트. 장례비용 계산기, 부고 문자·지방·축문 작성기, 사망신고·상속 안내, 수도권 추천 추모공원 무료 상담을 제공한다.", "",
+             "## 봉안당·납골당", f"- [지역별 봉안당 찾기]({u('region/index.html')})", f"- [봉안당 가격 비교]({u('feature/price.html')})",
+             f"- [예산으로 봉안당 추천]({u('pages/recommend.html')})", f"- [가까운 봉안당 찾기]({u('feature/near.html')})", f"- [수도권 추천 추모공원·무료 상담]({u('partner/index.html')})", "",
+             "## 장례식장·화장장", f"- [전국 장례식장·화장장]({u('funeral/index.html')})", f"- [장례비용 계산기]({u('tools/funeral-cost.html')})", "",
+             "## 장례 도우미", f"- [부고 문자 만들기]({u('tools/bugo.html')})", f"- [지방 쓰기]({u('tools/jibang.html')})", f"- [축문 쓰기]({u('tools/chukmun.html')})",
+             f"- [49재·삼우제 날짜 계산]({u('tools/49jae.html')})", f"- [차례상·제사상 차리는 법]({u('tools/jesasang.html')})", f"- [장례 후 할 일 체크리스트]({u('tools/after-death.html')})", "",
+             "## 가이드"] + [f"- [{g['title']}]({u('guides/' + g['slug'] + '.html')}): {g['description']}" for g in GUIDES]
+    (out / "llms.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def write_manifest(out):
